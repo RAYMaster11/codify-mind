@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Send, Sparkles, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { streamChat } from "@/utils/streamChat";
 
 interface Message {
   role: "user" | "assistant";
@@ -32,35 +33,43 @@ export default function Chat() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        role: "assistant",
-        content: "I understand you want to create that feature. Here's the code I generated for you:",
-        code: `// React Component Example
-import React, { useState } from 'react';
+    let assistantContent = "";
+    const upsertAssistant = (nextChunk: string) => {
+      assistantContent += nextChunk;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return prev.map((m, i) =>
+            i === prev.length - 1 ? { ...m, content: assistantContent } : m
+          );
+        }
+        return [...prev, { role: "assistant", content: assistantContent }];
+      });
+    };
 
-function ExampleComponent() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div className="p-6 bg-card rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">Counter: {count}</h2>
-      <button 
-        onClick={() => setCount(count + 1)}
-        className="px-4 py-2 bg-primary text-primary-foreground rounded"
-      >
-        Increment
-      </button>
-    </div>
-  );
-}
-
-export default ExampleComponent;`,
-      };
-      setMessages((prev) => [...prev, aiMessage]);
+    try {
+      await streamChat({
+        messages: [...messages, userMessage],
+        onDelta: (chunk) => upsertAssistant(chunk),
+        onDone: () => setIsLoading(false),
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: error,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+        },
+      });
+    } catch (e) {
+      console.error(e);
       setIsLoading(false);
-    }, 1500);
+      toast({
+        title: "Error",
+        description: "Failed to generate response",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyCode = (code: string, index: number) => {
@@ -104,37 +113,9 @@ export default ExampleComponent;`,
                   </div>
                 )}
                 <div className="flex-1">
-                  <p className="text-sm mb-2">{message.content}</p>
-                  {message.code && (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between bg-code-bg rounded-t-lg px-4 py-2 border-b border-border/50">
-                        <span className="text-xs text-muted-foreground font-mono">typescript</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyCode(message.code!, index)}
-                          className="h-6 text-xs"
-                        >
-                          {copiedIndex === index ? (
-                            <>
-                              <Check className="h-3 w-3 mr-1" />
-                              Copied
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-3 w-3 mr-1" />
-                              Copy
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      <pre className="bg-code-bg p-4 rounded-b-lg overflow-x-auto">
-                        <code className="text-xs font-mono text-foreground/90">
-                          {message.code}
-                        </code>
-                      </pre>
-                    </div>
-                  )}
+                  <div className="text-sm whitespace-pre-wrap prose prose-invert max-w-none prose-pre:bg-code-bg prose-pre:border prose-pre:border-border/50 prose-code:text-code-keyword">
+                    {message.content}
+                  </div>
                 </div>
               </div>
             </Card>

@@ -1,5 +1,5 @@
 import { IntegrationCard } from "@/components/IntegrationCard";
-import { Github, Mail, FileText, MessageSquare, Database, Calendar } from "lucide-react";
+import { Github, Mail, FileText, MessageSquare, Database, Calendar, Trello, Figma, Cloud, Phone, CreditCard, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
@@ -46,6 +46,48 @@ const integrations = [
     icon: Calendar,
     status: "available" as const,
     category: "Productivity",
+  },
+  {
+    name: "Trello",
+    description: "Manage boards, cards, and automate project management workflows",
+    icon: Trello,
+    status: "available" as const,
+    category: "Productivity",
+  },
+  {
+    name: "Figma",
+    description: "Export designs, sync components, and automate design handoffs",
+    icon: Figma,
+    status: "available" as const,
+    category: "Design",
+  },
+  {
+    name: "Dropbox",
+    description: "Store files, sync folders, and manage team document sharing",
+    icon: Cloud,
+    status: "available" as const,
+    category: "Storage",
+  },
+  {
+    name: "Twilio",
+    description: "Send SMS, make calls, and automate communication workflows",
+    icon: Phone,
+    status: "available" as const,
+    category: "Communication",
+  },
+  {
+    name: "Stripe",
+    description: "Process payments, manage subscriptions, and track transactions",
+    icon: CreditCard,
+    status: "connected" as const,
+    category: "Finance",
+  },
+  {
+    name: "Zapier",
+    description: "Connect 5000+ apps and create custom automation workflows",
+    icon: Zap,
+    status: "available" as const,
+    category: "Automation",
   },
 ];
 
